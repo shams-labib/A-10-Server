@@ -66,6 +66,36 @@ async function run() {
       const result = await reviewsProducts.insertOne(reviewData);
       res.send(result);
     });
+    app.get("/review-products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsProducts.findOne(query);
+
+      if (!result) {
+        return res.status(404).send({ message: "Review not found" });
+      }
+
+      res.send(result);
+    });
+    app.put("/review-products/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          foodName: updatedData.foodName,
+          foodImage: updatedData.foodImage,
+          restaurantName: updatedData.restaurantName,
+          location: updatedData.location,
+          rating: updatedData.rating,
+          reviewText: updatedData.reviewText,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      const result = await reviewsProducts.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // My reviews data
     app.get("/my-reviews", verifyFirebaseToken, async (req, res) => {
