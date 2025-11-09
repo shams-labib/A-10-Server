@@ -20,6 +20,7 @@ async function run() {
     const db = client.db("assignment-10");
     const reviewsProducts = db.collection("review-products");
     const restaurantsData = db.collection("resturent-place");
+    const sliderData = db.collection("slider");
 
     app.post("/review-products", async (req, res) => {
       const newUsers = req.body;
@@ -35,6 +36,12 @@ async function run() {
     // restaurants  data
     app.get("/restaurants-data", async (req, res) => {
       const cursor = await restaurantsData.find().toArray();
+      res.send(cursor);
+    });
+
+    // Slider data
+    app.get("/slider", async (req, res) => {
+      const cursor = await sliderData.find().toArray();
       res.send(cursor);
     });
 
