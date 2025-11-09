@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const port = 3000;
 const app = express();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(cors());
 app.use(express.json());
@@ -25,6 +25,23 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyFirebaseToken = async (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.status(401).send({ message: "Unauthorized access" });
+  }
+
+  const token = authorization.split(" ")[1];
+
+  try {
+    const decodedUser = await admin.auth().verifyIdToken(token);
+    req.decodedUser = decodedUser;
+    next();
+  } catch (error) {
+    return res.status(403).send({ message: "Forbidden access" });
+  }
+};
+
 async function run() {
   try {
     await client.connect();
@@ -34,9 +51,42 @@ async function run() {
     const sliderData = db.collection("slider");
 
     // review data
-    app.post("/review-products", async (req, res) => {
-      const newUsers = req.body;
-      const result = await reviewsProducts.insertOne(newUsers);
+    app.post("/review-products", verifyFirebaseToken, async (req, res) => {
+      const reviewData = req.body;
+      const decodedEmail = req.decodedUser.email;
+
+      // Email validation — শুধু নিজের নামেই post করতে পারবে
+      if (decodedEmail !== reviewData.userEmail) {
+        return res.status(403).send({ message: "Unauthorized email" });
+      }
+
+      // Add current date automatically (if not sent from frontend)
+      reviewData.createdAt = new Date().toISOString();
+
+      const result = await reviewsProducts.insertOne(reviewData);
+      res.send(result);
+    });
+
+    // My reviews data
+    app.get("/my-reviews", verifyFirebaseToken, async (req, res) => {
+      const userEmail = req.query.email;
+
+      if (req.decodedUser.email !== userEmail) {
+        return res.status(401).send({ message: "Unauthorize access" });
+      }
+
+      const query = { userEmail: userEmail };
+      const result = await reviewsProducts
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
+      res.send(result);
+    });
+
+    app.delete("/my-reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsProducts.deleteOne(query);
       res.send(result);
     });
 
