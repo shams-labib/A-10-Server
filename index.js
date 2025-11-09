@@ -5,6 +5,9 @@ const port = 3000;
 const app = express();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
+app.use(cors());
+app.use(express.json());
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gs1mqwb.mongodb.net/?appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
@@ -22,6 +25,7 @@ async function run() {
     const restaurantsData = db.collection("resturent-place");
     const sliderData = db.collection("slider");
 
+    // review data
     app.post("/review-products", async (req, res) => {
       const newUsers = req.body;
       const result = await reviewsProducts.insertOne(newUsers);
@@ -29,7 +33,10 @@ async function run() {
     });
 
     app.get("/review-products", async (req, res) => {
-      const cursor = await reviewsProducts.find().toArray();
+      const cursor = await reviewsProducts
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
       res.send(cursor);
     });
 
