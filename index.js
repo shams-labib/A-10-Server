@@ -18,16 +18,23 @@ async function run() {
   try {
     await client.connect();
     const db = client.db("assignment-10");
-    const productCollection = db.collection("products");
+    const reviewsProducts = db.collection("review-products");
+    const restaurantsData = db.collection("resturent-place");
 
-    app.post("/products", async (req, res) => {
+    app.post("/review-products", async (req, res) => {
       const newUsers = req.body;
-      const result = await productCollection.insertOne(newUsers);
+      const result = await reviewsProducts.insertOne(newUsers);
       res.send(result);
     });
 
-    app.get("/products", async (req, res) => {
-      const cursor = await productCollection.find().toArray();
+    app.get("/review-products", async (req, res) => {
+      const cursor = await reviewsProducts.find().toArray();
+      res.send(cursor);
+    });
+
+    // restaurants  data
+    app.get("/restaurants-data", async (req, res) => {
+      const cursor = await restaurantsData.find().toArray();
       res.send(cursor);
     });
 
