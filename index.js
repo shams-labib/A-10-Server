@@ -8,6 +8,14 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./firebase-key.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.gs1mqwb.mongodb.net/?appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
