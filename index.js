@@ -140,6 +140,31 @@ async function run() {
       res.send(cursor);
     });
 
+    // Search section
+
+    app.get("/search-reviews", async (req, res) => {
+      try {
+        const query = req.query.q || "";
+
+        const results = await reviewsProducts
+          .find({
+            $or: [
+              { foodName: { $regex: query, $options: "i" } },
+              { restaurantName: { $regex: query, $options: "i" } },
+              { location: { $regex: query, $options: "i" } },
+              { userName: { $regex: query, $options: "i" } },
+            ],
+          })
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        res.send(results);
+      } catch (error) {
+        console.error("Search error:", error);
+        res.status(500).send({ message: "Error while searching reviews" });
+      }
+    });
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
