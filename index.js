@@ -86,12 +86,9 @@ async function run() {
       const reviewData = req.body;
       const decodedEmail = req.decodedUser.email;
 
-      // Email validation — শুধু নিজের নামেই post করতে পারবে
       if (decodedEmail !== reviewData.userEmail) {
         return res.status(403).send({ message: "Unauthorized email" });
       }
-
-      // Add current date automatically (if not sent from frontend)
       reviewData.createdAt = new Date().toISOString();
 
       const result = await reviewsProducts.insertOne(reviewData);
@@ -196,10 +193,10 @@ async function run() {
       }
     });
 
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
   }
 }
