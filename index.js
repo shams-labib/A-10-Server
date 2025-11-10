@@ -44,11 +44,42 @@ const verifyFirebaseToken = async (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("assignment-10");
     const reviewsProducts = db.collection("review-products");
     const restaurantsData = db.collection("resturent-place");
+    const myFavouritesDB = db.collection("myFavourite");
     const sliderData = db.collection("slider");
+
+    // favourite section
+    app.post("/my-favourite", async (req, res) => {
+      const newUsers = req.body;
+      const cursor = await myFavouritesDB.insertOne(newUsers);
+      res.send(cursor);
+    });
+
+    app.get("/my-favourite", async (req, res) => {
+      const cursor = await myFavouritesDB
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      res.send(cursor);
+    });
+
+    app.get("/my-favourite/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await myFavouritesDB.findOne(query);
+      res.send(result);
+    });
+
+    app.delete("/my-favourite/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await myFavouritesDB.deleteOne(query);
+      res.send(result);
+    });
 
     // review data
     app.post("/review-products", verifyFirebaseToken, async (req, res) => {
