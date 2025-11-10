@@ -44,7 +44,7 @@ const verifyFirebaseToken = async (req, res, next) => {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
     const db = client.db("assignment-10");
     const reviewsProducts = db.collection("review-products");
     const restaurantsData = db.collection("resturent-place");
