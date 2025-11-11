@@ -35,7 +35,7 @@ const verifyFirebaseToken = async (req, res, next) => {
 
   try {
     const decodedUser = await admin.auth().verifyIdToken(token);
-    req.decodedUser = decodedUser;
+    req.decodedUser = decodedUser.email;
     next();
   } catch (error) {
     return res.status(403).send({ message: "Forbidden access" });
@@ -44,7 +44,7 @@ const verifyFirebaseToken = async (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("assignment-10");
     const reviewsProducts = db.collection("review-products");
     const restaurantsData = db.collection("resturent-place");
@@ -58,9 +58,17 @@ async function run() {
       res.send(cursor);
     });
 
-    app.get("/my-favourite", async (req, res) => {
+    app.get("/my-favourite", verifyFirebaseToken, async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.userEmail = email;
+        if (email !== req.decodedUser) {
+          return res.status(401).send({ message: "Unauthorize access" });
+        }
+      }
       const cursor = await myFavouritesDB
-        .find()
+        .find(query)
         .sort({ createdAt: -1 })
         .toArray();
 
@@ -84,7 +92,7 @@ async function run() {
     // review data
     app.post("/review-products", verifyFirebaseToken, async (req, res) => {
       const reviewData = req.body;
-      const decodedEmail = req.decodedUser.email;
+      const decodedEmail = req.decodedUser;
 
       if (decodedEmail !== reviewData.userEmail) {
         return res.status(403).send({ message: "Unauthorized email" });
@@ -129,7 +137,7 @@ async function run() {
     app.get("/my-reviews", verifyFirebaseToken, async (req, res) => {
       const userEmail = req.query.email;
 
-      if (req.decodedUser.email !== userEmail) {
+      if (req.decodedUser !== userEmail) {
         return res.status(401).send({ message: "Unauthorize access" });
       }
 
@@ -204,9 +212,6 @@ run().catch(console.dir);
 
 app.use(express.json());
 app.use(cors());
-
-// assignment-10
-// aiPzPSTuB9gEDk1D
 
 app.get("/", (req, res) => {
   res.send("This is server");
